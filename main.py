@@ -15,9 +15,11 @@ positions = []
 listener = None
 
 def click(pos: tuple) -> None:
+    old_pos = pyautogui.position()
     pyautogui.click(pos[0], pos[1])
+    pyautogui.move(old_pos[0], old_pos[1])
     # Offsets so it doesn't look sus
-    time.sleep(WALK_WAIT + range(-2, 1))
+    time.sleep(WALK_WAIT + range(-1, 1))
 
     KEYBOARD.press(MINE_KEY)
     KEYBOARD.release(MINE_KEY)
