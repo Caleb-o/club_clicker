@@ -1,6 +1,8 @@
 from typing import final
-import pyautogui, time, datetime
-from random import randint as range
+import pyautogui, time
+import datetime as dt
+import os
+from random import randint
 from pynput.mouse import Listener
 from pynput.keyboard import Controller
 
@@ -15,22 +17,20 @@ positions = []
 listener = None
 
 def click(pos: tuple) -> None:
-    old_pos = pyautogui.position()
     pyautogui.click(pos[0], pos[1])
-    pyautogui.move(old_pos[0], old_pos[1])
     # Offsets so it doesn't look sus
-    time.sleep(WALK_WAIT + range(-1, 1))
+    time.sleep(WALK_WAIT + randint(-1, 1))
 
     KEYBOARD.press(MINE_KEY)
     KEYBOARD.release(MINE_KEY)
 
 def get_position() -> tuple:
-    return (range(MIN[0], MAX[0]), range(MIN[1], MAX[1]))
+    return (randint(MIN[0], MAX[0]), randint(MIN[1], MAX[1]))
 
 def clicked(x, y, button, pressed):
     if pressed and len(positions) < 2:
         positions.append(pyautogui.position())
-        print(f' | Set position : [{len(positions)}]')
+        print(f' | set [{len(positions)}]', end='\r')
 
 def get_bounds():
     global listener
@@ -47,7 +47,12 @@ def get_bounds():
         listener.stop()
         print("\nQuitting.")
         return
-    print()
+    print('\033[K\r')
+
+
+def clear() -> None:
+    # Check if Windows or nix
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def main() -> None:
@@ -67,8 +72,11 @@ def main() -> None:
         MAX = positions[0]
         MIN = positions[1]
 
-    print('Starting...')
-    start = datetime.datetime.now()
+    # Clear the terminal
+    clear()
+
+    print(f'Bounds ({MIN[0]}, {MIN[1]}) ({MAX[0]}, {MAX[1]})')
+    start = dt.datetime.now()
 
     global MINE_COUNT
 
@@ -79,16 +87,20 @@ def main() -> None:
 
             click(pos)
             # Offsets so it doesn't look sus
-            time.sleep(MINE_TIME + range(-2, 2))
+            new_time = randint(MINE_TIME -2, MINE_TIME + 2)
+            for current in range(new_time):
+                now = (dt.datetime.now() - start).seconds / 60
+                print(f'\033[K\r {current * "#"}{(new_time - current) * " "} | {MINE_COUNT} mined | {now:.4} min', end='\r')
+                time.sleep(1)
 
-            print(f'\033[K\rGoing to {pos} to mine. Count: {MINE_COUNT}', end='\r')
+
     except KeyboardInterrupt:
         global listener
         listener.stop()
 
-        final_time = datetime.datetime.now() - start
+        final_time = dt.datetime.now() - start
         seconds = final_time.seconds
-        print(f'\nQuitting. Mined for {seconds} seconds. Potential haul {seconds}-{100 * seconds}')
-
+        minutes = seconds / 60
+        print(f'\nQuitting. Mined for {minutes:.2} minutes. Potential haul {seconds}-{100 * seconds}')
 if __name__ == '__main__':
     main()
